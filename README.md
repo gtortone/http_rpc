@@ -1,5 +1,5 @@
 # http_rpc
-Simple HTTP service to manage PDU outlets
+Simple HTTP service to manage PDU outlets on LuckFox Pico Plus for a custom board developed by Auger electronic service.
 
 # Setup
 
