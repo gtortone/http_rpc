@@ -1,0 +1,41 @@
+#!/bin/sh
+# HTTP front-end for the GPIO daemon (needs S50gpio_daemon running).
+
+DAEMON=/usr/bin/http_rpc.py
+PIDFILE=/run/http_rpc.pid
+LOG=/var/log/http_rpc.log
+USERS=/etc/rpc/http_users
+
+start() {
+    echo "Starting HTTP RPC..."
+
+    if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+        echo "Already running"
+        return
+    fi
+    rm -f "$PIDFILE"
+
+    if [ ! -s "$USERS" ]; then
+        echo "ERR no users: run '$DAEMON --set-user <name>' first"
+        return
+    fi
+
+    # exec keeps the pid written by -m; sh -c lets us redirect to the log
+    start-stop-daemon -S -b -m -p $PIDFILE -x /bin/sh -- \
+        -c "exec python3 -u $DAEMON >>$LOG 2>&1"
+}
+
+stop() {
+    echo "Stopping HTTP RPC..."
+    start-stop-daemon -K -p $PIDFILE
+    rm -f $PIDFILE
+}
+
+case "$1" in
+    start)   start ;;
+    stop)    stop ;;
+    restart) stop; sleep 1; start ;;
+    *)       echo "Usage: $0 {start|stop|restart}"; exit 1 ;;
+esac
+
+exit 0
